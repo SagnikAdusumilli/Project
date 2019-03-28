@@ -1,0 +1,97 @@
+---
+title: "MarkDown"
+output: html_document
+author: Sagnik Adusumilli
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#import packages;
+library(dplyr)
+library(reshape2)
+library(ggplot2)
+library(Hmisc)
+library(corrplot)
+library(mice)
+library(VIM)
+library(pROC)
+library(caret)
+library(cluster)
+library(sqldf)
+library(VIM)
+library(fpc)
+library(factoextra)
+# Clean all variables that might be left by other scripts
+rm(list=ls(all=TRUE))
+```
+
+## Data Exploration
+This is Social Networking Sevice (SNS) data of 30,000 teenagers. There was probably some Text mining done to label the features that appreared in the SNS data and those features are in shown in the columns
+
+```{r }
+teens <- read.csv("./data/snsdata.csv")
+str(teens)
+```
+So we see that most of this data is numeric since clustering cannot perform well with Nomial  varibles. The gender attribute is a binary variable and can be converted to numeric very easily. Infact R handles these variables and we don't have to do any conversions and they can be tread as binary.
+
+## Data Prep
+From the summary, above, we know there are some missing data. Here we have to make a choice, we could remove the data with missing attributer, or we could do some data imputations. For large datasets, we could remove discard rows with missing values, as the data loss would be small relatively. However, we should alsways consider how much of the data we are missing
+There are several methods of data imputation we can replace the missing values with the median of that column or we can use ML to predict the missing values.
+Let's use KNN. Note that this method can be very slow and may not be the optimal method to use 
+```{r}
+# missing data before KNN
+
+# teens <- kNN(teens, variable = c("age"))
+# teens <- KNN(teens, variable = c("age", "gender"))
+# in the interest of saving time, I wrote the output to a and read from there. So I don't have to run KNN every time
+teens <- read.csv("./data/teens_data_filled")
+```
+Lets start the cluster analyis on only the features that represent the number of times various interestins appeared on SNS profiles of teens.
+```{r pressure, echo=FALSE}
+# from the draft we know that there is friends would be a dominant group in all clusters, meaning all teenagers like friends.
+interests <- teens[6:40]
+# scale the dataset to account for different distributions.
+interests_z <- as.data.frame(lapply(interests, scale))
+
+# how do we decide the number of clusters to divide into
+# this is the elbow method applied to kmeans
+wss <- (nrow(interests_z)-1)*sum(apply(interests_z,2,var))
+  for (i in 2:20) wss[i] <- sum(kmeans(interests_z,
+                                       centers=i)$withinss)
+plot(1:20, wss, type="b", xlab="Number of Clusters",
+     ylab="Within groups sum of squares")
+```
+<br>Looks like we haven't reach the saturation point
+<br> We could do a PCA (Principal component Analysis) to understand some of the primary features that are responsible for the variables and discard non-contributing columns
+<br> we also know some columns can be merged togother since they are similar in nature. For example "god", "church", "bible" and religion can be combined one feature called "Religion"
+<br> Elimnation and construction of new features is called **feature engineering**
+```{r}
+#k-means
+# interests_z is the data set we are performing the clustering on
+# next arg is number of clusters
+# iter.max number of times the cluster algrithm runs
+# The number of random starting partitions when centers is a number. Trying nstart > 1 is often recommended.
+# teen_km <- kmeans(interests_z, 5, iter.max = 10, nstart = 2)
+#Or you can simply call: where it opitimzes all the other parameters
+teen_km <- kmeans(interests_z, 5)
+
+
+# k-mediods
+#teen_clusters <- pam(interests_z, 5)
+
+plotcluster(interests_z, teen_km$cluster)
+
+
+```
+<br>Let us see the factor distribution each cluster
+```{r fig.height=50, fig.width=50}
+par(mfrow=c(2,3))
+pie(colSums(interests[teen_km$cluster==1,]), cex=4)
+pie(colSums(interests[teen_km$cluster==2,]), cex=4)
+pie(colSums(interests[teen_km$cluster==3,]), cex=4)
+pie(colSums(interests[teen_km$cluster==4,]), cex=4)
+pie(colSums(interests[teen_km$cluster==5,]), cex=4)
+```
+Applications for this:
+Selectively advertise products to teens, based on interests
+Detect any issues in mental health based on negative interests
