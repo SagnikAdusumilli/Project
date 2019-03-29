@@ -1,5 +1,5 @@
 ---
-title: "MarkDown"
+title: "Teen SNS"
 output: html_document
 author: Sagnik Adusumilli
 ---
@@ -44,7 +44,7 @@ Let's use KNN. Note that this method can be very slow and may not be the optimal
 # teens <- kNN(teens, variable = c("age"))
 # teens <- KNN(teens, variable = c("age", "gender"))
 # in the interest of saving time, I wrote the output to a and read from there. So I don't have to run KNN every time
-teens <- read.csv("./data/teens_data_filled")
+teens <- read.csv("./data/teens_data_filled.csv")
 ```
 Lets start the cluster analyis on only the features that represent the number of times various interestins appeared on SNS profiles of teens.
 ```{r pressure, echo=FALSE}

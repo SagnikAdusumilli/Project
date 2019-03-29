@@ -1,0 +1,33 @@
+---
+title: "Linear regresion"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(reshape2)
+library(plyr)
+rm(list=ls(all=TRUE))
+```
+
+## Load the cars dataset
+
+```{r}
+# do read table, since data file is .data file
+cars <- read.table("./data/auto-mpg.data")
+# Looks like there is no missing data
+#sum(is.na(cars)) printed 0
+
+# column names were present in the website
+colnames(cars) <- c("mpg","cylinders","displacement","horsepower","weight","acceleration","model_year","origin","car_name")
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
