@@ -7,27 +7,134 @@ output: html_document
 library(ggplot2)
 library(reshape2)
 library(plyr)
+library(vcd)
+library(car)
 rm(list=ls(all=TRUE))
 ```
 
 ## Load the cars dataset
 
-```{r}
+```{r, warning=FALSE}
 # do read table, since data file is .data file
 cars <- read.table("./data/auto-mpg.data")
-# Looks like there is no missing data
-#sum(is.na(cars)) printed 0
-
+str(cars)
+# all the factors seem self-explanatory. Unfortunately we don't know what area the numbers in origin correspond to
 # column names were present in the website
 colnames(cars) <- c("mpg","cylinders","displacement","horsepower","weight","acceleration","model_year","origin","car_name")
+cars$horsepower <- as.numeric(levels(cars$horsepower))[cars$horsepower]
+# sum(is.na(cars)) printed 6
+
+cars <- na.omit(cars)
+
+# make all the clomns global variables
+attach(cars)
 ```
 
-## Including Plots
+## Data exploration
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r, fig.dim=c(10, 10)}
+str(cars)
+attach(cars)
+# scatter plot matrix between the numerical variables
+# display the the distribution of the variables
+# The way to read it is: x-axis is the variable in that colum and axis is the vairable in the row 
+pairs(~mpg + cylinders + displacement + horsepower + weight + acceleration + model_year+origin,
+      diag.panel = function(x, ...) {
+        par(new = TRUE)
+        hist(x, col = "light blue", main = "", axes = FALSE)
+      })
 ```
+From the graph abovew we can we there is possible negative correlation between mpg and displacment, and a postive corelation between displacement and weight. There is also a negative corelation between weight and mpg <br>
+```{r}
+# call an inital regression model
+# car name should not have any relevance
+# This model creates an equation to predict the dependent variable
+# outlier test?
+cars.fit <- lm(mpg ~ . -car_name, data=cars)
+# plots various graphs of the model including the residual vs fitted graph
+# plot(cars.fit)
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+# Evaluate Nonlinearlity
+# component + residueal plot
+crPlots(cars.fit)
+
+summary(cars.fit)
+```
+* The coefficient t-value is a measure of how many standard deviations our coefficient estimate is far away from 0. if it is relatively far from 0, we could conclude that the variable has a relationship with the independent variable variables
+* P-values for coefficients of cylinders, horsepower and acceleration are all greater than 0.05. 
+* This means that the relationship between the dependent and these independent variables is not 
+  significant at the 95% certainty level. I'll drop 2 of these variables and try again. High 
+* p-values for these independent variables do not mean that they definitely should not be used 
+in the model. It could be that some other variables are correlated with these variables and 
+making these variables less useful for prediction
+```{r}
+cars.fit1 <- lm(mpg ~ displacement + horsepower + weight , data=cars)
+summary(cars.fit1)
+
+```
+*Here we see that both Multiple R-squared and Adjusted R-squared have fallen. 
+*When comparing models, use Adjusted R-squared. That's because R-squared will increase or 
+ stay the same (never decrease) when more independent variables are added. The formula for 
+*Adjusted R-squared includes an adjustment to reduce R-squared. If the additional variable 
+ adds enough predictive information to the model to counter the negative adjustment then 
+*Adjusted R-squared will increase. If the amount of predictive information added is not 
+ valuable enough, Adjusted R-squared will reduce.
+```{r}
+#Trying more combinations as acceleration has very high p-value.
+
+# cars.fit3 <- lm(mpg ~ model_year + horsepower + weight, data = cars)
+# summary(cars.fit3)
+
+
+# cars.fit4 <- lm(mpg ~ model_year + horsepower + weight + origin, data = cars)
+# summary(cars.fit4)
+
+
+# cars.fit5 <- lm(mpg ~ model_year + acceleration + weight + origin, data = cars)
+# summary(cars.fit5)
+
+# cars.fit6 <- lm(mpg ~ model_year + weight + origin, data = cars)
+# summary(cars.fit6)
+#Now we're getting somewhere as all the coefficients have a small p-value.
+
+# cars.fit7 <- lm(mpg ~ I(displacement^2) + model_year + weight + origin, data = cars)
+# summary(cars.fit7)
+#Let's try some non-linear combinations with different exponents for horsepower.
+# cars.fit8 <- lm(mpg ~ I(horsepower^1) + I(horsepower^2) + I(horsepower^3) +
+#                   model_year + weight + origin, data = cars)
+# summary(cars.fit8)
+
+#The Adjusted R-squared is the highest so far. Another thing to note is that even though 
+#the p-value for horsepower^3 is very small (relationship is significant), the coefficient 
+#is tiny. So we should consider removing it unless horsepower^3 has an intuitive or business 
+#meaning to us in the given context.
+
+#While creating models we should always bring business understanding into consideration. 
+#If the context dictates that that particular variable is important to explaining the outcome,
+#we will retain it in the model even if the coefficient is very small.
+
+#If the effect is small and we are not able to explain why the independent variable should
+#affect the dependent variable in a particular way, we may be risking overfitting to our 
+#particular sample of data. Such a model may not generalize.
+
+# cars.fit9 <- lm(mpg ~ horsepower + model_year + weight + origin, data = cars)
+# 
+# summary(cars.fit9)
+
+#Adjusted R-squared reduced. We can do better.
+
+cars.fit10 <- lm(mpg ~ model_year + weight + origin + poly(horsepower,2) , data=cars)
+summary(cars.fit10)
+
+```
+* The adjusted R-squared is the 2nd hieghest.
+* None of the coefficients are very small, even though the coefficient for weight is small, the values of weight are in thousands
+* the P values in the 95% confidence intervals are also small, so we can have confidence in the coefficeints
+* The relationship is non-linear between mpg and horsepower
+* Surprsingly origin has a significant effect on mpg
+```{r}
+plot(cars.fit10)
+```
+```{r, include=FALSE}
+# write the model to be used in the r shiny app
+```
