@@ -137,4 +137,5 @@ plot(cars.fit10)
 ```
 ```{r, include=FALSE}
 # write the model to be used in the r shiny app
+# save(cars.fit10, file="./data/logRegModel.Rdata")
 ```
