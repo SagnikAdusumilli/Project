@@ -1,5 +1,4 @@
 ---
-title: "Teen SNS"
 output: html_document
 author: Sagnik Adusumilli
 ---
@@ -24,20 +23,30 @@ library(factoextra)
 # Clean all variables that might be left by other scripts
 rm(list=ls(all=TRUE))
 ```
+<center> <h1>Data driven marketing targeted towards teens</h1> </center>
+<hr>
+## Objective 
+<ul>
+<li><h3>Selectively advertise products to teens, based on interests</h3></li>
+<li><h3>Detect mental health issues based on negative interests</h3></li>
+</ul>
 
 ## Data Exploration
-This is Social Networking Sevice (SNS) data of 30,000 teenagers. There was probably some Text mining done to label the features that appreared in the SNS data and those features are in shown in the columns
+This is Social Networking Sevice (SNS) data of 30,000 teenagers. There was probably some Text mining done to label the features that appreared in the SNS data and those features are in shown in the below
 
 ```{r }
 teens <- read.csv("./data/snsdata.csv")
 str(teens)
 ```
-So we see that most of this data is numeric since clustering cannot perform well with Nomial  varibles. The gender attribute is a binary variable and can be converted to numeric very easily. Infact R handles these variables and we don't have to do any conversions and they can be tread as binary.
+So we see that most of this data is numeric. This is a good thing, since clusterting cannot be done on non-numeric catergorical data. The gender attribute is a binary variable and can be converted to numeric very easily. Infact R handles these variables and we don't have to do any conversions and they can be tread as binary.
 
 ## Data Prep
-From the summary, above, we know there are some missing data. Here we have to make a choice, we could remove the data with missing attributer, or we could do some data imputations. For large datasets, we could remove discard rows with missing values, as the data loss would be small relatively. However, we should alsways consider how much of the data we are missing
-There are several methods of data imputation we can replace the missing values with the median of that column or we can use ML to predict the missing values.
-Let's use KNN. Note that this method can be very slow and may not be the optimal method to use 
+From the summary above, we know that there is some missing data. Here we have to make a choice. We could remove the data with missing attributes, or we could do some data imputations. For large datasets, we could discard rows with missing values, as the data loss would be small relatively. However, we should alsways consider how much of the data is missing
+There are several methods of data imputation. <ul> 
+<li>we can replace the missing values with the median of that column.</li>
+<li>we can use ML to predict the missing values.</li>
+</ul>
+Let's use KNN. Note that this method can be very slow and may not be the optimal method to use
 ```{r}
 # missing data before KNN
 
@@ -46,7 +55,7 @@ Let's use KNN. Note that this method can be very slow and may not be the optimal
 # in the interest of saving time, I wrote the output to a and read from there. So I don't have to run KNN every time
 teens <- read.csv("./data/teens_data_filled.csv")
 ```
-Lets start the cluster analyis on only the features that represent the number of times various interestins appeared on SNS profiles of teens.
+Lets start the cluster analyis on only the features that represent the number of times various interests appeared on SNS profiles of teens.
 ```{r pressure, echo=FALSE}
 # from the draft we know that there is friends would be a dominant group in all clusters, meaning all teenagers like friends.
 interests <- teens[6:40]
@@ -62,9 +71,9 @@ plot(1:20, wss, type="b", xlab="Number of Clusters",
      ylab="Within groups sum of squares")
 ```
 <br>Looks like we haven't reach the saturation point
-<br> We could do a PCA (Principal component Analysis) to understand some of the primary features that are responsible for the variables and discard non-contributing columns
-<br> we also know some columns can be merged togother since they are similar in nature. For example "god", "church", "bible" and religion can be combined one feature called "Religion"
-<br> Elimnation and construction of new features is called **feature engineering**
+<br> - We could do a PCA (Principal component Analysis) to understand some of the primary features that are responsible for the variables and discard non-contributing columns
+<br> - We also know some columns can be merged together since they are similar in nature. For example "god", "church" and "bible" can be combined one feature called "Religion"
+<br> - Elimnation and construction of new features is called **feature engineering**
 ```{r}
 #k-means
 # interests_z is the data set we are performing the clustering on
@@ -92,6 +101,3 @@ pie(colSums(interests[teen_km$cluster==3,]), cex=4)
 pie(colSums(interests[teen_km$cluster==4,]), cex=4)
 pie(colSums(interests[teen_km$cluster==5,]), cex=4)
 ```
-Applications for this:
-Selectively advertise products to teens, based on interests
-Detect any issues in mental health based on negative interests

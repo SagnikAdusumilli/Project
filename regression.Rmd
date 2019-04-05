@@ -1,5 +1,4 @@
 ---
-title: "Linear regresion"
 output: html_document
 ---
 
@@ -11,30 +10,32 @@ library(vcd)
 library(car)
 rm(list=ls(all=TRUE))
 ```
+<center> <h1>Predict the mileage of Cars</h1> </center>
+<hr>
 
-## Load the cars dataset
+## Data exploration
 
 ```{r, warning=FALSE}
 # do read table, since data file is .data file
 cars <- read.table("./data/auto-mpg.data")
-str(cars)
 # all the factors seem self-explanatory. Unfortunately we don't know what area the numbers in origin correspond to
 # column names were present in the website
 colnames(cars) <- c("mpg","cylinders","displacement","horsepower","weight","acceleration","model_year","origin","car_name")
+str(cars)
+```
+horsepower is treated as categorical for some reason, it should be numeric. So we convert it into numeric
+```{r}
 cars$horsepower <- as.numeric(levels(cars$horsepower))[cars$horsepower]
-# sum(is.na(cars)) printed 6
+```
 
+```{r, results='hide'}
 cars <- na.omit(cars)
 
 # make all the clomns global variables
 attach(cars)
 ```
 
-## Data exploration
-
 ```{r, fig.dim=c(10, 10)}
-str(cars)
-attach(cars)
 # scatter plot matrix between the numerical variables
 # display the the distribution of the variables
 # The way to read it is: x-axis is the variable in that colum and axis is the vairable in the row 
@@ -44,7 +45,7 @@ pairs(~mpg + cylinders + displacement + horsepower + weight + acceleration + mod
         hist(x, col = "light blue", main = "", axes = FALSE)
       })
 ```
-From the graph abovew we can we there is possible negative correlation between mpg and displacment, and a postive corelation between displacement and weight. There is also a negative corelation between weight and mpg <br>
+From the graph above we can see there is a possible negative correlation between mpg and displacment, and a postive corelation between displacement and weight. There is also a negative corelation between weight and mpg <br>
 ```{r}
 # call an inital regression model
 # car name should not have any relevance
@@ -61,9 +62,9 @@ crPlots(cars.fit)
 summary(cars.fit)
 ```
 * The coefficient t-value is a measure of how many standard deviations our coefficient estimate is far away from 0. if it is relatively far from 0, we could conclude that the variable has a relationship with the independent variable variables
-* P-values for coefficients of cylinders, horsepower and acceleration are all greater than 0.05. 
+* P-values for coefficients of cylinders, horsepower and acceleration are all greater than 5%. 
 * This means that the relationship between the dependent and these independent variables is not 
-  significant at the 95% certainty level. I'll drop 2 of these variables and try again. High 
+  significant. I'll drop 2 of these variables and try again. High 
 * p-values for these independent variables do not mean that they definitely should not be used 
 in the model. It could be that some other variables are correlated with these variables and 
 making these variables less useful for prediction
